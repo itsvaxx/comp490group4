@@ -551,6 +551,7 @@
           align-items: center;
           backdrop-filter: blur(5px);
         }
+
         .modal-content {
           background: var(--card-bg);
           border-radius: 12px;
@@ -581,7 +582,7 @@
         }
 
         .modal-body {
-          padding: 1.5rem;
+          padding: 1.2rem 1.5rem;
         }
 
         .team-selectors {
@@ -731,8 +732,8 @@
 
         .stat-value {
           text-align: center;
-          font-weight: 600;
-          font-size: 1.1rem;
+          font-weight: 100;
+          font-size: 0.7rem;
           min-width: 60px;
         }
 
@@ -847,8 +848,8 @@
 
         /* For game details view */
         .game-details-logo {
-          width: 80px;
-          height: 80px;
+          width: 90px;
+          height: 90px;
         }
 
         .game-details-logo img {
@@ -866,6 +867,514 @@
           align-items: center;
         }
 
+        /* ===== TOOLTIP STYLES ===== */
+
+        .tooltip-content,
+        .tooltip-content *,
+        .tooltip-content h5,
+        .tooltip-content p,
+        .tooltip-content .tooltip-header,
+        .tooltip-content .tooltip-body {
+          text-transform: none !important; /* Force normal case for ALL tooltip content */
+        }
+
+        .stat-tooltip {
+          position: relative;
+          cursor: help;
+          border-bottom: 1px dotted rgba(255, 255, 255, 0.3);
+          display: inline-block;
+        }
+
+        /* Tooltip content - hidden by default */
+        .tooltip-content {
+          position: absolute;
+          z-index: 1000;
+          background: rgba(0, 0, 0, 0.95);
+          backdrop-filter: blur(10px);
+          color: white;
+          padding: 12px;
+          border-radius: 8px;
+          font-size: 0.85rem;
+          width: 280px;
+          max-width: 90vw;
+          visibility: hidden;
+          opacity: 0;
+          transition: all 0.2s ease;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          pointer-events: none;
+        }
+
+        /* Show tooltip on hover */
+        .stat-tooltip:hover .tooltip-content {
+          visibility: visible;
+          opacity: 1;
+        }
+
+        /* Tooltip content styling */
+        .tooltip-content h5 {
+          margin: 0 0 6px 0;
+          color: var(--primary-blue);
+          font-size: 0.9rem;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          padding-bottom: 4px;
+        }
+
+        .tooltip-content p {
+          margin: 0;
+          line-height: 1.4;
+          color: #e0e0e0;
+        }
+
+        .tooltip-content strong {
+          color: var(--success-green);
+          font-weight: 600;
+        }
+
+        /* For game stats tooltips */
+        .stat-item .stat-tooltip {
+          display: inline-block;
+          width: 100%;
+        }
+
+        /* For player stats tooltips */
+        .player-stats .stat-tooltip {
+          margin: 0 2px;
+        }
+
+        /* For team comparison stats */
+        .stat-label .stat-tooltip {
+          border-bottom: none;
+        }
+
+        .stat-label .tooltip-content {
+          width: 320px;
+        }
+
+        /* Ensure tooltips appear above modals */
+        .modal .tooltip-content {
+          z-index: 10000;
+          max-width: 300px;
+        }
+
+        .modal .stat-tooltip .tooltip-content {
+          position: fixed !important;
+          top: 50% !important;
+          left: 50% !important;
+          transform: translate(-50%, -50%) !important;
+          z-index: 10001 !important;
+          max-width: 320px;
+/*          box-shadow: 0 10px 40px rgba(0,0,0,0.5);*/
+        }
+
+        .modal .stat-tooltip .tooltip-content::after {
+          display: none;
+        }
+
+        /* Responsive tooltips */
+        @media (max-width: 768px) {
+          .tooltip-content {
+            width: 250px;
+            font-size: 0.8rem;
+          }
+          
+          .stat-label .tooltip-content {
+            width: 280px;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .tooltip-content {
+            width: 220px;
+            /* On very small screens, always position above */
+            left: 0 !important;
+            right: auto !important;
+            transform: translateX(0) translateY(-10px) !important;
+          }
+          
+          .tooltip-content::after {
+            left: 20px !important;
+            right: auto !important;
+          }
+          
+          /* Override positioning classes on mobile */
+          .stat-tooltip.left-tooltip .tooltip-content,
+          .stat-tooltip.right-tooltip .tooltip-content,
+          .stat-tooltip.center-tooltip .tooltip-content {
+            bottom: 125%;
+            top: auto;
+            left: 0;
+            right: auto;
+            transform: translateY(-10px);
+          }
+          
+          .stat-tooltip.left-tooltip .tooltip-content::after,
+          .stat-tooltip.right-tooltip .tooltip-content::after,
+          .stat-tooltip.center-tooltip .tooltip-content::after {
+            top: 100%;
+            left: 20px;
+            border-color: rgba(0, 0, 0, 0.95) transparent transparent transparent;
+          }
+        }
+
+        /* ===== PLAYER DETAILS STYLES ===== */
+        .player-details-header {
+          display: flex;
+          align-items: center;
+          gap: 1.2rem;
+          margin-bottom: 1rem;
+          padding-bottom: 1rem;
+          border-bottom: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .player-details-logo {
+          width: 60px;
+          height: 60px;
+          flex-shrink: 0;
+        }
+
+        .player-details-logo img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+        }
+
+        .player-basic-info h4 {
+          margin: 0 0 0.3rem 0;
+          font-size: 1.3rem;
+          font-weight: 600;
+        }
+
+        .player-position {
+          font-size: 0.85rem;
+          color: var(--text-secondary);
+          margin-bottom: 0.2rem;
+        }
+
+        .player-game-info {
+          font-size: 0.8rem;
+          opacity: 0.7;
+        }
+
+        .player-stats-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+          gap: 0.75rem;
+          margin: 1.5rem 0;
+        }
+
+        .player-stat-item {
+          background: rgba(255, 255, 255, 0.05);
+          padding: 0.75rem 0.5rem;
+          border-radius: 8px;
+          text-align: center;
+        }
+
+        .player-stat-value {
+          font-size: 1.5rem;
+          font-weight: 600;
+          color: var(--primary-red);
+          margin-bottom: 0.2rem;
+          line-height: 1.2;
+        }
+
+        .player-stat-label {
+          font-size: 0.7rem;
+          opacity: 0.8;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .player-stats-categories {
+          margin-top: 1rem;
+        }
+
+        .stats-category {
+          margin-bottom: 1.2rem;
+        }
+
+        .stats-category h5 {
+          margin: 0 0 0.5rem 0;
+          font-size: 0.9rem;
+          padding-bottom: 0.3rem;
+          border-bottom: 1px solid rgba(255,255,255,0.1);
+          color: var(--primary-blue);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .stats-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+          gap: 0.25rem;
+        }
+
+        .stat-row {
+          display: flex;
+          justify-content: space-between;
+          padding: 0.25rem 0.5rem; 
+          background: rgba(255,255,255,0.03);
+          border-radius: 4px;
+          font-size: 0.75rem;
+        }
+
+        .stat-label {
+          color: var(--text-secondary);
+          font-size: 0.7rem; 
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 120px;
+        }
+
+        .stat-value {
+          font-weight: 500;
+          font-size: 0.7rem;
+          color: #fff;
+          white-space: nowrap;
+        }
+
+        /* Player clickable styles */
+        .player-card {
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+
+        .player-card:hover {
+          background: rgba(255,255,255,0.08);
+          transform: translateX(5px);
+        }
+
+        /* Advanced stats grid - smaller and more compact */
+        .advanced-stats-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+          gap: 0.75rem;
+          margin: 1.5rem 0;
+          padding: 1rem;
+          background: rgba(0, 0, 0, 0.2);
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .advanced-stat-item {
+          background: rgba(255, 255, 255, 0.05);
+          padding: 0.75rem 0.5rem;
+          border-radius: 8px;
+          text-align: center;
+          transition: transform 0.2s;
+        }
+
+        .advanced-stat-item:hover {
+          transform: translateY(-2px);
+          background: rgba(255, 255, 255, 0.08);
+        }
+
+        .advanced-stat-value {
+          font-size: 1.3rem;
+          font-weight: 600;
+          color: #4caf50;
+          margin-bottom: 0.25rem;
+          line-height: 1.2;
+        }
+
+        .advanced-stat-label {
+          font-size: 0.75rem;
+          opacity: 0.9;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        /* Full Standings Styles */
+        .full-standings-container {
+          display: flex;
+          flex-direction: column;
+          gap: 2rem;
+        }
+
+        .conference-full {
+          background: rgba(255, 255, 255, 0.03);
+          border-radius: 12px;
+          overflow: hidden;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .conference-header {
+          padding: 1rem 1.5rem;
+          border-bottom: 2px solid;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .conference-header.eastern {
+          background: linear-gradient(90deg, rgba(29, 66, 138, 0.3) 0%, rgba(29, 66, 138, 0.1) 100%);
+          border-bottom-color: #1d428a;
+        }
+
+        .conference-header.western {
+          background: linear-gradient(90deg, rgba(200, 16, 46, 0.3) 0%, rgba(200, 16, 46, 0.1) 100%);
+          border-bottom-color: #c8102e;
+        }
+
+        .conference-header h2 {
+          margin: 0;
+          font-size: 1.5rem;
+          font-weight: 600;
+        }
+
+        .conference-stats {
+          font-size: 0.9rem;
+          opacity: 0.8;
+          padding: 0.25rem 0.75rem;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 20px;
+        }
+
+        .standings-table {
+          width: 100%;
+          overflow-x: auto;
+        }
+
+        .standings-row {
+          display: grid;
+          grid-template-columns: 50px 2fr repeat(8, 80px);
+          align-items: center;
+          padding: 0.75rem 1rem;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+          font-size: 0.9rem;
+          transition: background-color 0.2s;
+        }
+
+        .standings-row:hover {
+          background: rgba(255, 255, 255, 0.05);
+        }
+
+        .standings-row.header {
+          background: rgba(0, 0, 0, 0.3);
+          font-weight: 600;
+          color: #fff;
+          border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+          pointer-events: none;
+        }
+
+        .standings-row.playoff-position {
+          background: rgba(76, 175, 80, 0.1);
+          border-left: 3px solid #4caf50;
+        }
+
+        .standings-row.playoff-position:hover {
+          background: rgba(76, 175, 80, 0.15);
+        }
+
+        .rank {
+          text-align: center;
+          font-weight: 600;
+          color: #888;
+        }
+
+        .team {
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+        }
+
+        .team-info {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .team-city {
+          font-size: 0.8rem;
+          opacity: 0.7;
+        }
+
+        .team-name {
+          font-weight: 600;
+        }
+
+        .stat {
+          text-align: center;
+        }
+
+        .streak {
+          font-weight: 600;
+        }
+
+        .streak.win {
+          color: #4caf50;
+        }
+
+        .streak.loss {
+          color: #f44336;
+        }
+
+        /* ===== PLAYER DETAILS FONT FIX ===== */
+        #player-modal .stat-row,
+        #player-modal .stat-label,
+        #player-modal .stat-value,
+        #player-modal .stats-grid *,
+        #player-modal .player-stats-categories * {
+          font-size: 0.9rem !important;
+        }
+
+        #player-modal .stat-label {
+          font-size: 0.65rem !important;
+          color: #b0b0b0 !important;
+          max-width: 100px !important;
+        }
+
+        #player-modal .stat-value {
+          font-size: 0.9rem !important;
+          font-weight: 500 !important;
+          color: white !important;
+        }
+
+        #player-modal .stats-category h5 {
+          font-size: 0.75rem !important;
+          margin-bottom: 0.25rem !important;
+        }
+
+        /* Fix the shooting stats display */
+        #player-modal .stat-row {
+          display: flex !important;
+          justify-content: space-between !important;
+          align-items: center !important;
+          padding: 0.2rem 0.4rem !important;
+          margin-bottom: 0.1rem !important;
+          background: rgba(255,255,255,0.03) !important;
+          border-radius: 4px !important;
+        }
+
+        /* Force the stat rows to be side-by-side */
+        #player-modal .stats-grid {
+          display: grid !important;
+          grid-template-columns: 1fr 1fr !important;
+          gap: 0.2rem !important;
+        }
+
+        #player-modal .stats-category:first-child .stats-grid {
+          grid-template-columns: 1fr !important;
+          gap: 0.15rem !important;
+        }
+
+        #player-modal .stats-category:first-child .stat-row {
+          padding: 0.15rem 0.4rem !important;
+        }
+
+        /* Better formatting for shooting stats */
+        #player-modal .stat-row .stat-label {
+          max-width: 80px !important;
+          white-space: nowrap !important;
+          overflow: visible !important;
+        }
+
+        #player-modal .stat-row .stat-value {
+          text-align: right !important;
+          font-family: monospace !important; /* Makes numbers align better */
+        }
+
+
     </style>
 </head>
 <body>
@@ -876,9 +1385,9 @@
     
     <div class="container">
         <!-- Replay Information -->
-        <div class="card replay-info" id="replay-info">
+        <!-- <div class="card replay-info" id="replay-info">
             <div class="loading">Loading replay information...</div>
-        </div>
+        </div> -->
         
         <!-- Games Section -->
         <div class="card">
@@ -963,6 +1472,22 @@
       </div>
     </div>
 
+    <!-- Player Details Modal -->
+    <div id="player-modal" class="modal" style="display: none;">
+      <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+          <h3 id="player-modal-title">Player Statistics</h3>
+          <span class="close-btn" onclick="closePlayerModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+          <div id="player-details-content">
+            <div class="loading">Loading player details...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

@@ -51,7 +51,7 @@ async function getReplayMetadata() {
     
     const metadata = await response.json();
     
-    // Extract date from CurrentTime ISO string "2023-12-02T02:01:52.2747338"
+    // Extract date from CurrentTime ISO string
     let currentDate;
     if (metadata.CurrentTime) {
       currentDate = new Date(metadata.CurrentTime).toISOString().split('T')[0];
@@ -99,9 +99,7 @@ app.get('/api/current-state', async (req, res) => {
     console.log(`Current replay date: ${currentDate}`);
 
     const date = new Date(currentDate);
-
     date.setDate(date.getDate() - 1);
-
     const previousDate = date.toISOString().split("T")[0];
     
     console.log(`Fetching games for both dates: ${previousDate} and ${currentDate}`);
@@ -122,13 +120,6 @@ app.get('/api/current-state', async (req, res) => {
     ];
     
     console.log(`Total games across both days: ${allGames.length}`);
-    
-    if (allGames.length > 0) {
-      console.log('Sample games from both days:');
-      allGames.slice(0, 3).forEach(game => {
-        console.log(`- ${game.GameID}: ${game.AwayTeam} vs ${game.HomeTeam} (${game.Status}) on ${game.Day.split('T')[0]}`);
-      });
-    }
     
     const gamesWithBoxscoreStatus = await checkGamesBoxscoreStatus(allGames);
     console.log(`Processed ${gamesWithBoxscoreStatus.length} games with boxscore status`);
@@ -171,59 +162,6 @@ app.get('/api/current-state', async (req, res) => {
   }
 });
 
-// app.get('/api/debug/boxscore/:gameId', async (req, res) => {
-//   try {
-//     const gameId = req.params.gameId;
-//     console.log(`=== DEBUG: Testing boxscore for game ${gameId} ===`);
-    
-//     const boxscoreUrl = `${REPLAY_BASE_URL}/stats/json/boxscore/${gameId}?key=${REPLAY_API_KEY}`;
-//     console.log('Fetching from:', boxscoreUrl);
-    
-//     const response = await fetch(boxscoreUrl);
-//     console.log('Response status:', response.status);
-    
-//     if (!response.ok) {
-//       throw new Error(`HTTP error! status: ${response.status}`);
-//     }
-    
-//     const boxscore = await response.json();
-//     console.log('Boxscore data structure:', {
-//       hasGame: !!boxscore.Game,
-//       gameStatus: boxscore.Game?.Status,
-//       awayScore: boxscore.Game?.AwayTeamScore,
-//       homeScore: boxscore.Game?.HomeTeamScore,
-//       hasTeamGames: !!boxscore.TeamGames,
-//       teamGamesLength: boxscore.TeamGames?.length,
-//       hasPlayerGames: !!boxscore.PlayerGames,
-//       playerGamesLength: boxscore.PlayerGames?.length,
-//       hasQuarters: !!boxscore.Quarters,
-//       quartersLength: boxscore.Quarters?.length
-//     });
-    
-//     res.json({
-//       url: boxscoreUrl,
-//       status: response.status,
-//       data: boxscore
-//     });
-    
-//   } catch (error) {
-//     console.error('DEBUG Error:', error.message);
-//     res.status(500).json({
-//       error: error.message,
-//       url: boxscoreUrl
-//     });
-//   }
-// });
-
-// app.get('/api/debug/metadata', async (req, res) => {
-//   try {
-//     const metadata = await getReplayMetadata();
-//     res.json(metadata);
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// });
-
 // Helper function to filter games that have available boxscores
 async function checkGamesBoxscoreStatus(games) {
   if (!games || games.length === 0) {
@@ -240,16 +178,6 @@ async function checkGamesBoxscoreStatus(games) {
       console.log('Game status:', game.Status);
       
       const boxscore = await fetchFromReplayAPI(`/stats/json/boxscore/${game.GameID}`);
-      
-      // Debug the boxscore structure
-      // console.log(`Boxscore check for ${game.GameID}:`, {
-      //   hasGame: !!boxscore.Game,
-      //   gameStatus: boxscore.Game?.Status,
-      //   awayScore: boxscore.Game?.AwayTeamScore,
-      //   homeScore: boxscore.Game?.HomeTeamScore,
-      //   teamGamesCount: boxscore.TeamGames?.length,
-      //   playerGamesCount: boxscore.PlayerGames?.length
-      // });
 
       // Check if we have valid data
       const hasValidScores = boxscore.Game && 
@@ -257,7 +185,6 @@ async function checkGamesBoxscoreStatus(games) {
                            boxscore.Game.HomeTeamScore !== null;
       
       const hasPlayerData = boxscore.PlayerGames && boxscore.PlayerGames.length > 0;
-      const hasTeamData = boxscore.TeamGames && boxscore.TeamGames.length > 0;
       
       // Include if it has scores OR has player data
       const hasBoxscoreData = hasValidScores || hasPlayerData;
@@ -272,13 +199,12 @@ async function checkGamesBoxscoreStatus(games) {
       });
       
       if (hasBoxscoreData) {
-        console.log(`✓ Game ${game.GameID} from ${gameDate} has boxscore data (scores: ${boxscore.Game.AwayTeamScore}-${boxscore.Game.HomeTeamScore}, players: ${boxscore.PlayerGames?.length})`);
+        console.log(`✓ Game ${game.GameID} from ${gameDate} has boxscore data`);
       } else {
         console.log(`✗ Game ${game.GameID} from ${gameDate} has no usable boxscore data`);
       }
     } catch (error) {
       console.log(`✗ Game ${game.GameID} boxscore unavailable: ${error.message}`);
-      // Still include the game but mark as unavailable
       gamesWithStatus.push({
         ...game,
         boxscore: null,
@@ -289,28 +215,10 @@ async function checkGamesBoxscoreStatus(games) {
     }
   }
   
-  console.log(`\n=== BOXSCORE STATUS RESULTS ===`);
-  console.log(`Total games processed: ${gamesWithStatus.length}`);
-  
-  const availableGames = gamesWithStatus.filter(g => g.hasBoxscore).length;
-  const unavailableGames = gamesWithStatus.filter(g => !g.hasBoxscore).length;
-  
-  console.log(`Games with boxscores: ${availableGames}`);
-  console.log(`Games without boxscores: ${unavailableGames}`);
-  
-  // Log the games
-  gamesWithStatus.forEach(game => {
-    if (game.hasBoxscore) {
-      console.log(`✓ ${game.GameID}: ${game.AwayTeam} vs ${game.HomeTeam} - ${game.boxscore.Game.AwayTeamScore}-${game.boxscore.Game.HomeTeamScore} (${game.gameDate})`);
-    } else {
-      console.log(`⏰ ${game.GameID}: ${game.AwayTeam} vs ${game.HomeTeam} - Not started (${game.gameDate})`);
-    }
-  });
-  
   return gamesWithStatus;
 }
 
-// Get detailed boxscore for a specific game (now we can use cached data)
+// Get detailed boxscore for a specific game
 app.get('/api/game/:gameId', async (req, res) => {
   try {
     const gameId = req.params.gameId;
@@ -334,34 +242,8 @@ app.get('/api/game/:gameId', async (req, res) => {
 // Get all teams for comparison dropdown
 app.get('/api/teams', async (req, res) => {
   try {
-    const metadata = await getReplayMetadata();
-    const currentSeason = metadata.CurrentSeason;
-    
-    // Get teams from standings data
-    const standings = await fetchFromReplayAPI(`/stats/json/standings/${currentSeason}`);
-    
-    const teams = standings.map(team => ({
-      key: team.Key,
-      name: team.Name,
-      city: team.City,
-      wins: team.Wins,
-      losses: team.Losses,
-      conference: team.Conference
-    }));
-    
-    res.json(teams);
-  } catch (error) {
-    console.error('Error fetching teams:', error.message);
-    res.status(500).json({ error: 'Failed to fetch teams' });
-  }
-});
-
-// Get all teams for comparison dropdown - using real data
-app.get('/api/teams', async (req, res) => {
-  try {
     console.log('Fetching teams data...');
     
-    // Use the actual standings data we already have
     const metadata = await getReplayMetadata();
     const currentSeason = metadata.CurrentSeason;
     const standings = await fetchFromReplayAPI(`/stats/json/standings/${currentSeason}`);
@@ -383,42 +265,15 @@ app.get('/api/teams', async (req, res) => {
     // Fallback to static team list if API fails
     const fallbackTeams = [
       { key: 'BOS', name: 'Celtics', city: 'Boston', wins: 8, losses: 2, conference: 'Eastern' },
-      { key: 'PHI', name: '76ers', city: 'Philadelphia', wins: 8, losses: 1, conference: 'Eastern' },
-      { key: 'DEN', name: 'Nuggets', city: 'Denver', wins: 8, losses: 2, conference: 'Western' },
-      { key: 'DAL', name: 'Mavericks', city: 'Dallas', wins: 8, losses: 2, conference: 'Western' },
-      { key: 'MIN', name: 'Timberwolves', city: 'Minnesota', wins: 7, losses: 2, conference: 'Western' },
-      { key: 'MIL', name: 'Bucks', city: 'Milwaukee', wins: 6, losses: 4, conference: 'Eastern' },
-      { key: 'IND', name: 'Pacers', city: 'Indiana', wins: 6, losses: 4, conference: 'Eastern' },
-      { key: 'HOU', name: 'Rockets', city: 'Houston', wins: 6, losses: 3, conference: 'Western' },
-      { key: 'MIA', name: 'Heat', city: 'Miami', wins: 6, losses: 4, conference: 'Eastern' },
-      { key: 'OKC', name: 'Thunder', city: 'Oklahoma City', wins: 6, losses: 4, conference: 'Western' },
-      { key: 'GS', name: 'Warriors', city: 'Golden State', wins: 6, losses: 5, conference: 'Western' },
-      { key: 'ATL', name: 'Hawks', city: 'Atlanta', wins: 5, losses: 4, conference: 'Eastern' },
-      { key: 'BKN', name: 'Nets', city: 'Brooklyn', wins: 5, losses: 5, conference: 'Eastern' },
       { key: 'NY', name: 'Knicks', city: 'New York', wins: 5, losses: 5, conference: 'Eastern' },
-      { key: 'ORL', name: 'Magic', city: 'Orlando', wins: 5, losses: 4, conference: 'Eastern' },
-      { key: 'LAL', name: 'Lakers', city: 'Los Angeles', wins: 5, losses: 5, conference: 'Western' },
-      { key: 'TOR', name: 'Raptors', city: 'Toronto', wins: 5, losses: 5, conference: 'Eastern' },
-      { key: 'SAC', name: 'Kings', city: 'Sacramento', wins: 5, losses: 4, conference: 'Western' },
-      { key: 'CLE', name: 'Cavaliers', city: 'Cleveland', wins: 4, losses: 6, conference: 'Eastern' },
-      { key: 'CHI', name: 'Bulls', city: 'Chicago', wins: 4, losses: 7, conference: 'Eastern' },
-      { key: 'NO', name: 'Pelicans', city: 'New Orleans', wins: 4, losses: 6, conference: 'Western' },
-      { key: 'PHO', name: 'Suns', city: 'Phoenix', wins: 4, losses: 6, conference: 'Western' },
-      { key: 'LAC', name: 'Clippers', city: 'Los Angeles', wins: 3, losses: 6, conference: 'Western' },
-      { key: 'CHA', name: 'Hornets', city: 'Charlotte', wins: 3, losses: 6, conference: 'Eastern' },
-      { key: 'POR', name: 'Trail Blazers', city: 'Portland', wins: 3, losses: 6, conference: 'Western' },
-      { key: 'SA', name: 'Spurs', city: 'San Antonio', wins: 3, losses: 7, conference: 'Western' },
-      { key: 'UTA', name: 'Jazz', city: 'Utah', wins: 3, losses: 7, conference: 'Western' },
-      { key: 'MEM', name: 'Grizzlies', city: 'Memphis', wins: 2, losses: 8, conference: 'Western' },
-      { key: 'DET', name: 'Pistons', city: 'Detroit', wins: 2, losses: 9, conference: 'Eastern' },
-      { key: 'WAS', name: 'Wizards', city: 'Washington', wins: 2, losses: 8, conference: 'Eastern' }
+      { key: 'GS', name: 'Warriors', city: 'Golden State', wins: 6, losses: 5, conference: 'Western' },
+      { key: 'LAL', name: 'Lakers', city: 'Los Angeles', wins: 5, losses: 5, conference: 'Western' }
     ];
     res.json(fallbackTeams);
   }
 });
 
-
-// Compare two teams 
+// Compare two teams
 app.get('/api/compare/:team1/:team2', async (req, res) => {
   try {
     const { team1, team2 } = req.params;
@@ -480,13 +335,11 @@ app.get('/api/compare/:team1/:team2', async (req, res) => {
 // Helper function to get team season stats from the actual data
 async function getTeamSeasonStats() {
   try {
-
     const metadata = await getReplayMetadata();
     const teamStats = await fetchFromReplayAPI(`/stats/json/teamseasonstats/${metadata.CurrentSeason}`);
     return teamStats;
   } catch (error) {
     console.error('Error fetching team season stats:', error.message);
-    // Return empty array if API fails
     return [];
   }
 }
@@ -515,7 +368,10 @@ async function getAllGamesForComparison() {
   try {
     const metadata = await getReplayMetadata();
     const currentDate = metadata.CurrentDate;
-    // const previousDate = '2023-11-13';
+    
+    const date = new Date(currentDate);
+    date.setDate(date.getDate() - 1);
+    const previousDate = date.toISOString().split("T")[0];
     
     const [currentDayGames, previousDayGames] = await Promise.all([
       fetchFromReplayAPI(`/stats/json/gamesbydate/${currentDate}`),
@@ -582,44 +438,284 @@ function calculateHeadToHeadRecord(games, team1, team2) {
   };
 }
 
-// Helper function to calculate team stats from games
-async function calculateTeamSeasonStats(teamKey, allGames) {
-  const teamGames = allGames.filter(game => 
-    (game.AwayTeam === teamKey || game.HomeTeam === teamKey) && game.hasBoxscore
-  );
+// Get play-by-play data for a specific game
+app.get('/api/game/:gameId/playbyplay', async (req, res) => {
+  try {
+    const gameId = req.params.gameId;
+    console.log(`Fetching play-by-play for game: ${gameId}`);
+    
+    const pbpData = await fetchFromReplayAPI(`/pbp/json/playbyplay/${gameId}`);
+    
+    // Check if there's actual play data
+    const hasPlays = pbpData && pbpData.Plays && pbpData.Plays.length > 0;
+    
+    res.json({
+      gameId: gameId,
+      hasPlays: hasPlays,
+      quarters: pbpData.Quarters || [],
+      plays: pbpData.Plays || [],
+      totalPlays: pbpData.Plays ? pbpData.Plays.length : 0
+    });
+  } catch (error) {
+    console.error(`Error fetching play-by-play for game ${gameId}:`, error.message);
+    res.status(500).json({ 
+      error: 'Failed to fetch play-by-play data',
+      details: error.message,
+      gameId: gameId,
+      hasPlays: false
+    });
+  }
+});
+
+// Get a summary of key plays for a game
+app.get('/api/game/:gameId/keyplays', async (req, res) => {
+  try {
+    const gameId = req.params.gameId;
+    console.log(`Fetching key plays for game: ${gameId}`);
+    
+    const pbpData = await fetchFromReplayAPI(`/pbp/json/playbyplay/${gameId}`);
+    
+    if (!pbpData || !pbpData.Plays || pbpData.Plays.length === 0) {
+      return res.json({
+        gameId: gameId,
+        hasPlays: false,
+        message: 'No play data available for this game'
+      });
+    }
+    
+    // Filter for key plays (scoring plays, fouls, turnovers)
+    const allPlays = pbpData.Plays;
+    
+    // Get scoring plays
+    const scoringPlays = allPlays.filter(play => 
+      play.Points && play.Points > 0
+    ).slice(-10); // Last 10 scoring plays
+    
+    // Get biggest runs
+    const runs = analyzeRuns(allPlays, pbpData.Quarters);
+    
+    // Get clutch moments (last 2 minutes of 4th quarter/overtime)
+    const clutchPlays = getClutchPlays(allPlays, pbpData.Quarters);
+    
+    // Get lead changes
+    const leadChanges = analyzeLeadChanges(allPlays);
+    
+    // Get player highlights
+    const playerHighlights = analyzePlayerHighlights(allPlays);
+    
+    res.json({
+      gameId: gameId,
+      hasPlays: true,
+      summary: {
+        totalPlays: allPlays.length,
+        scoringPlays: scoringPlays.length,
+        leadChanges: leadChanges.count,
+        biggestRun: runs.biggestRun
+      },
+      keyPlays: {
+        recentScoring: scoringPlays,
+        clutchPlays: clutchPlays.slice(0, 5),
+        biggestRun: runs.biggestRunDetails,
+        gameWinner: findGameWinningPlay(allPlays, pbpData.Game)
+      },
+      highlights: playerHighlights,
+      leadChanges: leadChanges.timeline
+    });
+    
+  } catch (error) {
+    console.error(`Error fetching key plays for game ${gameId}:`, error.message);
+    res.status(500).json({ 
+      error: 'Failed to fetch key plays',
+      details: error.message 
+    });
+  }
+});
+
+// Helper function to analyze runs
+function analyzeRuns(plays, quarters) {
+  let currentRunTeam = null;
+  let currentRunPoints = 0;
+  let biggestRun = { team: null, points: 0, startTime: null, endTime: null };
+  let biggestRunDetails = null;
   
-  let totalPoints = 0;
-  let totalPointsAllowed = 0;
-  let totalRebounds = 0;
-  let totalAssists = 0;
-  let gameCount = 0;
+  // Sort plays by sequence
+  const sortedPlays = [...plays].sort((a, b) => a.Sequence - b.Sequence);
   
-  teamGames.forEach(game => {
-    if (game.boxscore && game.boxscore.Game && game.boxscore.TeamGames) {
-      const teamGame = game.boxscore.TeamGames.find(tg => 
-        tg.Team === teamKey || tg.TeamID === teamKey
-      );
-      const isHome = game.HomeTeam === teamKey;
-      const pointsFor = isHome ? game.boxscore.Game.HomeTeamScore : game.boxscore.Game.AwayTeamScore;
-      const pointsAgainst = isHome ? game.boxscore.Game.AwayTeamScore : game.boxscore.Game.HomeTeamScore;
-      
-      if (teamGame && pointsFor !== null && pointsAgainst !== null) {
-        totalPoints += pointsFor;
-        totalPointsAllowed += pointsAgainst;
-        totalRebounds += teamGame.Rebounds || 0;
-        totalAssists += teamGame.Assists || 0;
-        gameCount++;
+  for (const play of sortedPlays) {
+    if (play.Points && play.Points > 0 && play.Team) {
+      if (play.Team === currentRunTeam) {
+        currentRunPoints += play.Points;
+      } else {
+        // Run ended
+        if (currentRunPoints > biggestRun.points) {
+          biggestRun = {
+            team: currentRunTeam,
+            points: currentRunPoints,
+            startTime: play.TimeRemainingMinutes ? `${play.QuarterName || 'Q?'} - ${play.TimeRemainingMinutes}:${play.TimeRemainingSeconds}` : null,
+            endTime: null
+          };
+        }
+        // Start new run
+        currentRunTeam = play.Team;
+        currentRunPoints = play.Points;
       }
     }
-  });
+  }
+  
+  // Check final run
+  if (currentRunPoints > biggestRun.points) {
+    biggestRun = {
+      team: currentRunTeam,
+      points: currentRunPoints,
+      description: `${currentRunTeam} went on a ${currentRunPoints}-point run`
+    };
+  }
   
   return {
-    pointsPerGame: gameCount > 0 ? (totalPoints / gameCount).toFixed(1) : '0.0',
-    pointsAllowedPerGame: gameCount > 0 ? (totalPointsAllowed / gameCount).toFixed(1) : '0.0',
-    reboundsPerGame: gameCount > 0 ? (totalRebounds / gameCount).toFixed(1) : '0.0',
-    assistsPerGame: gameCount > 0 ? (totalAssists / gameCount).toFixed(1) : '0.0',
-    gamesAnalyzed: gameCount
+    biggestRun: biggestRun.points,
+    biggestRunDetails: biggestRun
   };
+}
+
+// Helper function to get clutch plays
+function getClutchPlays(plays, quarters) {
+  if (!quarters || quarters.length === 0) return [];
+  
+  // Find the last quarter (4th or OT)
+  const lastQuarter = quarters[quarters.length - 1];
+  
+  // Get plays from last 2 minutes of final quarter
+  const clutchPlays = plays.filter(play => 
+    play.QuarterID === lastQuarter.QuarterID &&
+    play.TimeRemainingMinutes <= 2 &&
+    (play.Points > 0 || play.Category === 'Foul' || play.Category === 'Turnover')
+  );
+  
+  return clutchPlays;
+}
+
+// Helper function to analyze lead changes
+function analyzeLeadChanges(plays) {
+  let currentLeader = null;
+  let leadChanges = [];
+  
+  const sortedPlays = [...plays].sort((a, b) => a.Sequence - b.Sequence);
+  
+  for (const play of sortedPlays) {
+    if (play.AwayTeamScore !== undefined && play.HomeTeamScore !== undefined) {
+      if (play.AwayTeamScore > play.HomeTeamScore) {
+        if (currentLeader !== 'Away') {
+          currentLeader = 'Away';
+          leadChanges.push({
+            time: `${play.QuarterName || 'Q?'} - ${play.TimeRemainingMinutes}:${play.TimeRemainingSeconds}`,
+            newLeader: 'Away',
+            score: `${play.AwayTeamScore}-${play.HomeTeamScore}`
+          });
+        }
+      } else if (play.HomeTeamScore > play.AwayTeamScore) {
+        if (currentLeader !== 'Home') {
+          currentLeader = 'Home';
+          leadChanges.push({
+            time: `${play.QuarterName || 'Q?'} - ${play.TimeRemainingMinutes}:${play.TimeRemainingSeconds}`,
+            newLeader: 'Home',
+            score: `${play.AwayTeamScore}-${play.HomeTeamScore}`
+          });
+        }
+      }
+    }
+  }
+  
+  return {
+    count: leadChanges.length,
+    timeline: leadChanges
+  };
+}
+
+// Helper function to analyze player highlights
+function analyzePlayerHighlights(plays) {
+  const playerStats = {};
+  
+  for (const play of plays) {
+    if (play.PlayerID && play.Points > 0) {
+      if (!playerStats[play.PlayerID]) {
+        playerStats[play.PlayerID] = {
+          playerId: play.PlayerID,
+          playerName: play.PlayerName || 'Player',
+          team: play.Team,
+          points: 0,
+          madeShots: 0,
+          assists: 0,
+          highlights: []
+        };
+      }
+      
+      playerStats[play.PlayerID].points += play.Points || 0;
+      playerStats[play.PlayerID].madeShots += 1;
+      
+      if (play.Points >= 3) {
+        playerStats[play.PlayerID].highlights.push({
+          time: `${play.QuarterName || 'Q?'} - ${play.TimeRemainingMinutes}:${play.TimeRemainingSeconds}`,
+          description: play.Description,
+          points: play.Points
+        });
+      }
+    }
+    
+    if (play.Category === 'Assist' && play.AssistedByPlayerID) {
+      if (!playerStats[play.AssistedByPlayerID]) {
+        playerStats[play.AssistedByPlayerID] = {
+          playerId: play.AssistedByPlayerID,
+          playerName: 'Player',
+          team: play.Team,
+          points: 0,
+          madeShots: 0,
+          assists: 0,
+          highlights: []
+        };
+      }
+      playerStats[play.AssistedByPlayerID].assists += 1;
+    }
+  }
+  
+  // Get top performers
+  const topScorers = Object.values(playerStats)
+    .sort((a, b) => b.points - a.points)
+    .slice(0, 5);
+    
+  return {
+    topScorers
+  };
+}
+
+// Helper function to find game-winning play
+function findGameWinningPlay(plays, gameInfo) {
+  if (!gameInfo) return null;
+  
+  // Find plays in final minutes that could be game-winners
+  const finalPlays = plays.filter(play => 
+    play.QuarterName === '4' && play.TimeRemainingMinutes <= 5 && play.Points > 0
+  ).sort((a, b) => {
+    // Sort by time (later in game first)
+    if (a.TimeRemainingMinutes !== b.TimeRemainingMinutes) {
+      return a.TimeRemainingMinutes - b.TimeRemainingMinutes;
+    }
+    return a.TimeRemainingSeconds - b.TimeRemainingSeconds;
+  });
+  
+  if (finalPlays.length === 0) return null;
+  
+  // Look for plays that put the winning team ahead for good
+  let winningPlay = null;
+  let winningTeam = gameInfo.AwayTeamScore > gameInfo.HomeTeamScore ? gameInfo.AwayTeam : gameInfo.HomeTeam;
+  
+  for (const play of finalPlays) {
+    if (play.Team === winningTeam) {
+      winningPlay = play;
+      break;
+    }
+  }
+  
+  return winningPlay;
 }
 
 // Start the server
