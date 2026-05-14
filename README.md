@@ -1,3 +1,5 @@
+```markdown
+
 \# GameLens - NBA Analytics Dashboard
 
 
@@ -351,4 +353,6 @@ COMP490 Group 4
 \- SportsDataIO for providing the NBA replay API
 
 \- NBA for game data and statistics
+
+```
 
